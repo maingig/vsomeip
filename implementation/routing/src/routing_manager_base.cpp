@@ -994,7 +994,11 @@ void routing_manager_base::remove_local(client_t _client,
                   const std::set<std::tuple<service_t, instance_t, eventgroup_t>>& _subscribed_eventgroups,
                   bool _remove_uid) {
 
+#if !defined(QNX)
     std::pair<uid_t, gid_t> its_uid_gid(ANY_UID, ANY_GID);
+#else
+    std::pair<uint32_t, uint32_t> its_uid_gid(ANY_UID, ANY_GID);
+#endif
     security::get()->get_client_to_uid_gid_mapping(_client, its_uid_gid);
 
     if (_remove_uid) {

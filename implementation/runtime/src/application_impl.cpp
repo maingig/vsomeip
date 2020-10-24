@@ -12,7 +12,9 @@
 
 #ifndef _WIN32
 #include <dlfcn.h>
+#ifndef QNX
 #include <sys/syscall.h>
+#endif
 #endif
 
 #include <vsomeip/defines.hpp>
@@ -332,7 +334,7 @@ bool application_impl::init() {
 }
 
 void application_impl::start() {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX)
     if (getpid() != static_cast<pid_t>(syscall(SYS_gettid))) {
         // only set threadname if calling thread isn't the main thread
         std::stringstream s;
@@ -400,7 +402,7 @@ void application_impl::start() {
                             << std::hex << std::setw(4) << std::setfill('0')
                             << client_ << " (" << name_ << ") is: " << std::hex
                             << std::this_thread::get_id()
-                    #ifndef _WIN32
+                    #if !defined(_WIN32) && !defined(QNX)
                             << " TID: " << std::dec << static_cast<int>(syscall(SYS_gettid))
                     #endif
                             ;
@@ -447,7 +449,7 @@ void application_impl::start() {
     VSOMEIP_INFO << "io thread id from application: "
             << std::hex << std::setw(4) << std::setfill('0') << client_ << " ("
             << name_ << ") is: " << std::hex << std::this_thread::get_id()
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX)
             << " TID: " << std::dec << static_cast<int>(syscall(SYS_gettid))
 #endif
     ;
@@ -1552,7 +1554,7 @@ void application_impl::main_dispatch() {
     VSOMEIP_INFO << "main dispatch thread id from application: "
             << std::hex << std::setw(4) << std::setfill('0') << client_ << " ("
             << name_ << ") is: " << std::hex << its_id
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX)
             << " TID: " << std::dec << static_cast<int>(syscall(SYS_gettid))
 #endif
             ;
@@ -1605,7 +1607,7 @@ void application_impl::dispatch() {
     VSOMEIP_INFO << "dispatch thread id from application: "
             << std::hex << std::setw(4) << std::setfill('0') << client_ << " ("
             << name_ << ") is: " << std::hex << its_id
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX)
             << " TID: " << std::dec << static_cast<int>(syscall(SYS_gettid))
 #endif
             ;
@@ -1888,7 +1890,7 @@ void application_impl::shutdown() {
     VSOMEIP_INFO << "shutdown thread id from application: "
             << std::hex << std::setw(4) << std::setfill('0') << client_ << " ("
             << name_ << ") is: " << std::hex << std::this_thread::get_id()
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX)
             << " TID: " << std::dec << static_cast<int>(syscall(SYS_gettid))
 #endif
     ;

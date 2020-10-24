@@ -9,6 +9,10 @@
     #include <stdlib.h>
     #define bswap_16(x) _byteswap_ushort(x)
     #define bswap_32(x) _byteswap_ulong(x)
+#elif defined(QNX)
+    #include <gulliver.h>
+    #define bswap_16(x) ENDIAN_SWAP16(x)
+    #define bswap_32(x) ENDIAN_SWAP32(x)
 #else
     #include <byteswap.h>
 #endif

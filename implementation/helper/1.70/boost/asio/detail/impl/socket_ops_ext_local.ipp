@@ -44,6 +44,15 @@ signed_size_type recv(socket_type s, buf* bufs, size_t count,
     return socket_error_retval;
   ec = boost::system::error_code();
   return bytes_transferred;
+#elif defined(QNX)
+  msghdr msg = msghdr();
+  msg.msg_iov = bufs;
+  msg.msg_iovlen = static_cast<int>(count);
+  msg.msg_control = nullptr;
+  msg.msg_controllen = 0;
+
+  signed_size_type result = error_wrapper(::recvmsg(s, &msg, flags), ec);
+  return result;
 #else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
   msghdr msg = msghdr();
   msg.msg_iov = bufs;
@@ -113,6 +122,16 @@ signed_size_type recvfrom(socket_type s, buf* bufs, size_t count,
     return socket_error_retval;
   ec = boost::system::error_code();
   return bytes_transferred;
+#elif defined(QNX)
+  msghdr msg = msghdr();
+  msg.msg_iov = bufs;
+  msg.msg_iovlen = static_cast<int>(count);
+  msg.msg_control = nullptr;
+  msg.msg_controllen = 0;
+
+  signed_size_type result = error_wrapper(::recvmsg(s, &msg, flags), ec);
+  *addrlen = msg.msg_namelen;
+  return result;
 #else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
   msghdr msg = msghdr();
   init_msghdr_msg_name(msg.msg_name, addr);
