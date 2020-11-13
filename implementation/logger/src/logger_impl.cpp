@@ -97,7 +97,7 @@ logger_impl::get() {
     return (nullptr);
 }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX) 
 static void logger_impl_teardown(void) __attribute__((destructor));
 static void logger_impl_teardown(void)
 {

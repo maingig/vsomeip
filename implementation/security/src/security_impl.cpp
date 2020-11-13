@@ -1658,7 +1658,7 @@ security_impl::get() {
     return (nullptr);
 }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(QNX) 
 static void security_teardown(void) __attribute__((destructor));
 static void security_teardown(void)
 {
