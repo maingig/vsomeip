@@ -176,7 +176,10 @@ void routing_manager_base::release_service(client_t _client,
         if (found_service != local_services_history_.end()) {
            auto found_instance = found_service->second.find(_instance);
            if (found_instance != found_service->second.end()) {
-               local_services_history_.erase(_service);
+               found_service->second.erase(_instance);
+               if (found_service->second.empty()) {
+                   local_services_history_.erase(_service);
+               }
            }
         }
     }
@@ -357,7 +360,10 @@ void routing_manager_base::register_event(client_t _client,
                         // Check whether all additional bytes (if any) are excluded
                         for (length_t i = its_min_length; i < its_max_length; i++) {
                             auto j = its_debounce->ignore_.find(i);
-                            if (j == its_debounce->ignore_.end() && j->second == 0xFF) {
+                            // A change is detected when an additional byte is not
+                            // excluded at all or if its exclusion does not cover
+                            // all its bits.
+                            if (j == its_debounce->ignore_.end() || j->second != 0xFF) {
                                 is_changed = true;
                                 break;
                             }
@@ -439,7 +445,8 @@ void routing_manager_base::register_event(client_t _client,
             }
         }
     }
-    if(!_is_cache_placeholder) {
+
+    if (!its_event->is_cache_placeholder()) {
         its_event->add_ref(_client, _is_provided);
     }
 
@@ -1046,7 +1053,9 @@ void routing_manager_base::remove_local(client_t _client,
         for (auto& sic : its_clients) {
             local_services_history_[std::get<0>(sic)][std::get<1>(sic)].erase(std::get<2>(sic));
             if (local_services_history_[std::get<0>(sic)][std::get<1>(sic)].size() == 0) {
-                local_services_history_.erase(std::get<0>(sic));
+                local_services_history_[std::get<0>(sic)].erase(std::get<1>(sic));
+                if (local_services_history_[std::get<0>(sic)].size() == 0)
+                    local_services_history_.erase(std::get<0>(sic));
             }
         }
     }
@@ -1140,10 +1149,11 @@ bool routing_manager_base::send_local_notification(client_t _client,
             _data[VSOMEIP_METHOD_POS_MAX]);
     service_t its_service = VSOMEIP_BYTES_TO_WORD(
             _data[VSOMEIP_SERVICE_POS_MIN], _data[VSOMEIP_SERVICE_POS_MAX]);
+
     std::shared_ptr<event> its_event = find_event(its_service, _instance, its_method);
     if (its_event && !its_event->is_shadow()) {
-
         for (auto its_client : its_event->get_subscribers()) {
+
             // local
             if (its_client == VSOMEIP_ROUTING_CLIENT) {
                 has_remote = true;
@@ -1154,6 +1164,7 @@ bool routing_manager_base::send_local_notification(client_t _client,
                 has_local = true;
             }
 #endif
+
             std::shared_ptr<endpoint> its_local_target = ep_mgr_->find_local(its_client);
             if (its_local_target) {
                 send_local(its_local_target, _client, _data, _size,

@@ -84,41 +84,33 @@ void udp_client_endpoint_impl::connect() {
             }
         }
 
-        if (local_.port() == ILLEGAL_PORT) {
-            // Let the OS assign the port
-            local_.port(0);
-        }
-
 #ifndef _WIN32
         // If specified, bind to device
         std::string its_device(configuration_->get_device());
         if (its_device != "") {
-            if (!setsockopt(socket_->native_handle(),
-                    SOL_SOCKET, SO_BINDTODEVICE, its_device.c_str(), (int)its_device.size())) {
+            if (setsockopt(socket_->native_handle(),
+                    SOL_SOCKET, SO_BINDTODEVICE, its_device.c_str(), (int)its_device.size()) == -1) {
                 VSOMEIP_WARNING << "UDP Client: Could not bind to device \"" << its_device << "\"";
             }
         }
 #endif
 
-        // In case a client endpoint port was configured,
-        // bind to it before connecting
-        if (local_.port() != ILLEGAL_PORT) {
-            boost::system::error_code its_bind_error;
-            socket_->bind(local_, its_bind_error);
-            if(its_bind_error) {
-                VSOMEIP_WARNING << "udp_client_endpoint::connect: "
-                        "Error binding socket: " << its_bind_error.message()
-                        << " remote:" << get_address_port_remote();
-                try {
-                    // don't connect on bind error to avoid using a random port
-                    strand_.post(std::bind(&client_endpoint_impl::connect_cbk,
-                                    shared_from_this(), its_bind_error));
-                } catch (const std::exception &e) {
-                    VSOMEIP_ERROR << "udp_client_endpoint_impl::connect: "
-                            << e.what() << " remote:" << get_address_port_remote();
-                }
-                return;
+        // Bind address and, optionally, port.
+        boost::system::error_code its_bind_error;
+        socket_->bind(local_, its_bind_error);
+        if(its_bind_error) {
+            VSOMEIP_WARNING << "udp_client_endpoint::connect: "
+                    "Error binding socket: " << its_bind_error.message()
+                    << " remote:" << get_address_port_remote();
+            try {
+                // don't connect on bind error to avoid using a random port
+                strand_.post(std::bind(&client_endpoint_impl::connect_cbk,
+                                shared_from_this(), its_bind_error));
+            } catch (const std::exception &e) {
+                VSOMEIP_ERROR << "udp_client_endpoint_impl::connect: "
+                        << e.what() << " remote:" << get_address_port_remote();
             }
+            return;
         }
 
         state_ = cei_state_e::CONNECTING;
@@ -268,7 +260,7 @@ void udp_client_endpoint_impl::receive_cbk(
 #if 0
         std::stringstream msg;
         msg << "ucei::rcb(" << _error.message() << "): ";
-        for (std::size_t i = 0; i < _bytes + recv_buffer_size_; ++i)
+        for (std::size_t i = 0; i < _bytes; ++i)
             msg << std::hex << std::setw(2) << std::setfill('0')
                 << (int) (*_recv_buffer)[i] << " ";
         VSOMEIP_INFO << msg.str();
