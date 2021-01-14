@@ -12,8 +12,13 @@
 
 namespace vsomeip_v3 {
 
+#if !defined(QNX)
 bool
 policy::get_uid_gid(uid_t &_uid, gid_t &_gid) const {
+#else
+bool
+policy::get_uid_gid(uint32_t &_uid, uint32_t &_gid) const {
+#endif
 
     if (credentials_.size() != 1)
         return (false);
@@ -34,9 +39,15 @@ policy::get_uid_gid(uid_t &_uid, gid_t &_gid) const {
     return (true);
 }
 
+#if !defined(QNX)
 bool
 policy::deserialize_uid_gid(const byte_t * &_data, uint32_t &_size,
             uid_t &_uid, gid_t &_gid) const {
+#else
+bool
+policy::deserialize_uid_gid(const byte_t * &_data, uint32_t &_size,
+            uint32_t &_uid, uint32_t &_gid) const {
+#endif
 
     bool its_result;
 
@@ -55,9 +66,13 @@ bool
 policy::deserialize(const byte_t * &_data, uint32_t &_size) {
 
     bool its_result;
+#if !defined(QNX)
     uid_t its_uid;
     gid_t its_gid;
-
+#else
+    uint32_t its_uid;
+    uint32_t its_gid;
+#endif
     std::lock_guard<std::mutex> its_lock(mutex_);
 
     its_result = deserialize_uid_gid(_data, _size, its_uid, its_gid);
@@ -65,9 +80,15 @@ policy::deserialize(const byte_t * &_data, uint32_t &_size) {
         return (false);
 
     // Fill policy uid/gid
+#if !defined(QNX)
     const auto its_uid_interval
         = boost::icl::interval<uid_t>::closed(its_uid, its_uid);
     boost::icl::interval_set<gid_t> its_gid_set;
+#else
+    const auto its_uid_interval
+        = boost::icl::interval<uint32_t>::closed(its_uid, its_uid);
+    boost::icl::interval_set<uint32_t> its_gid_set;
+#endif
     its_gid_set.insert(its_gid);
     credentials_ += std::make_pair(its_uid_interval, its_gid_set);
 

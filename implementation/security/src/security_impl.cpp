@@ -700,11 +700,17 @@ security_impl::load_policy(const boost::property_tree::ptree &_tree) {
     bool allow_deny_set(false);
     for (auto i = _tree.begin(); i != _tree.end(); ++i) {
         if (i->first == "credentials") {
+#if !defined(QNX)
             boost::icl::interval_set<uid_t> its_uid_interval_set;
             boost::icl::interval_set<gid_t> its_gid_interval_set;
             boost::icl::discrete_interval<uid_t> its_uid_interval;
             boost::icl::discrete_interval<gid_t> its_gid_interval;
-
+#else
+            boost::icl::interval_set<uint32_t> its_uid_interval_set;
+            boost::icl::interval_set<uint32_t> its_gid_interval_set;
+            boost::icl::discrete_interval<uint32_t> its_uid_interval;
+            boost::icl::discrete_interval<uint32_t> its_gid_interval;
+#endif
             bool has_uid(false), has_gid(false);
             bool has_uid_range(false), has_gid_range(false);
             for (auto n = i->second.begin();
@@ -719,16 +725,31 @@ security_impl::load_policy(const boost::property_tree::ptree &_tree) {
                         if (its_value != "any") {
                             uint32_t its_uid;
                             read_data(its_value, its_uid);
+#if !defined(QNX)
                             its_uid_interval = boost::icl::construct<
                                 boost::icl::discrete_interval<uid_t> >(
                                         its_uid, its_uid,
                                         boost::icl::interval_bounds::closed());
+#else
+                            its_uid_interval = boost::icl::construct<
+                                boost::icl::discrete_interval<uint32_t> >(
+                                        its_uid, its_uid,
+                                        boost::icl::interval_bounds::closed());
+#endif
                         } else {
+#if !defined(QNX)
                             its_uid_interval = boost::icl::construct<
                                 boost::icl::discrete_interval<uid_t> >(
                                         std::numeric_limits<uid_t>::min(),
                                         std::numeric_limits<uid_t>::max(),
                                         boost::icl::interval_bounds::closed());
+#else
+                            its_uid_interval = boost::icl::construct<
+                                boost::icl::discrete_interval<uint32_t> >(
+                                        std::numeric_limits<uint32_t>::min(),
+                                        std::numeric_limits<uint32_t>::max(),
+                                        boost::icl::interval_bounds::closed());
+#endif
                         }
                         has_uid = true;
                     }
@@ -740,16 +761,31 @@ security_impl::load_policy(const boost::property_tree::ptree &_tree) {
                         if (its_value != "any") {
                             uint32_t its_gid;
                             read_data(its_value, its_gid);
+#if !defined(QNX)
                             its_gid_interval = boost::icl::construct<
                                 boost::icl::discrete_interval<gid_t> >(
                                         its_gid, its_gid,
                                         boost::icl::interval_bounds::closed());
+#else
+                            its_gid_interval = boost::icl::construct<
+                                boost::icl::discrete_interval<uint32_t> >(
+                                        its_gid, its_gid,
+                                        boost::icl::interval_bounds::closed());
+#endif
                         } else {
+#if !defined(QNX)
                             its_gid_interval = boost::icl::construct<
                                 boost::icl::discrete_interval<gid_t> >(
                                         std::numeric_limits<gid_t>::min(),
                                         std::numeric_limits<gid_t>::max(),
                                         boost::icl::interval_bounds::closed());
+#else
+                            its_gid_interval = boost::icl::construct<
+                                boost::icl::discrete_interval<uint32_t> >(
+                                        std::numeric_limits<uint32_t>::min(),
+                                        std::numeric_limits<uint32_t>::max(),
+                                        boost::icl::interval_bounds::closed());
+#endif
                         }
                         has_gid = true;
                     }
@@ -914,16 +950,27 @@ security_impl::load_policy_body(std::shared_ptr<policy> &_policy,
 }
 
 
+#if !defined(QNX)
 void
 security_impl::load_credential(
         const boost::property_tree::ptree &_tree,
         boost::icl::interval_map<uid_t,
             boost::icl::interval_set<gid_t> > &_credentials) {
-
+#else
+void
+security_impl::load_credential(
+        const boost::property_tree::ptree &_tree,
+        boost::icl::interval_map<uint32_t,
+            boost::icl::interval_set<uint32_t> > &_credentials) {
+#endif
     for (auto i = _tree.begin(); i != _tree.end(); ++i) {
+#if !defined(QNX)
         boost::icl::interval_set<uid_t> its_uid_interval_set;
         boost::icl::interval_set<gid_t> its_gid_interval_set;
-
+#else
+        boost::icl::interval_set<uint32_t> its_uid_interval_set;
+        boost::icl::interval_set<uint32_t> its_gid_interval_set;
+#endif
         for (auto j = i->second.begin(); j != i->second.end(); ++j) {
             std::string its_key(j->first);
             if (its_key == "uid") {

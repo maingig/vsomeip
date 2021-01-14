@@ -794,7 +794,11 @@ void routing_manager_stub::on_register_application(client_t _client) {
             routing_info_[_client].first = 0;
         }
 
+#if !defined(QNX)
         std::pair<uid_t, gid_t> its_uid_gid;
+#else
+        std::pair<uint32_t, uint32_t> its_uid_gid;
+#endif
         std::set<std::shared_ptr<policy> > its_policies;
 
         security::get()->get_client_to_uid_gid_mapping(_client, its_uid_gid);

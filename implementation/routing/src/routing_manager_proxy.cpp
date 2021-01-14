@@ -2601,8 +2601,13 @@ void routing_manager_proxy::on_update_security_credentials(const byte_t *_data, 
 
         its_gid_set.insert(its_gid);
 
+#if !defined(QNX)
         its_policy->credentials_ += std::make_pair(
                 boost::icl::interval<uid_t>::closed(its_uid, its_uid), its_gid_set);
+#else
+        its_policy->credentials_ += std::make_pair(
+                boost::icl::interval<uint32_t>::closed(its_uid, its_uid), its_gid_set);
+#endif
         its_policy->allow_who_ = true;
         its_policy->allow_what_ = true;
 

@@ -269,9 +269,13 @@ protected:
         eventgroup_t eventgroup_;
         major_version_t major_;
         event_t event_;
+#if !defined(QNX)
         uid_t uid_;
         gid_t gid_;
-
+#else
+        uint32_t uid_;
+        uint32_t gid_;
+#endif
         bool operator<(const subscription_data_t &_other) const {
             return (service_ < _other.service_
                     || (service_ == _other.service_
